@@ -92,7 +92,7 @@ partrition_drive() {
     case ${yn} in
     ${REGEX_YES}*)
         printf "${GREEN}%s${NORMAL}\n" "Creating Partritions ..."
-        # printf "g\nn\n\n\n+1G\nt\n1\nn\n\n\n\nt\n2\n20\nw\n" | fdisk "${DRIVE}"
+        printf "g\nn\n\n\n+1G\nt\n1\nn\n\n\n\nt\n2\n20\nw\n" | fdisk "${DRIVE}"
         printf "${GREEN}%s${NORMAL}\n" "DONE"
         if [[ "${IS_NVME}" == true ]]; then
             EFI_PARTRITION="${DRIVE}p1"
@@ -123,7 +123,7 @@ partrition_drive() {
 
 # Encrypt main Partrition using LUKS1
 encrypt_root() {
-    cryptsetup luksFormat --type1 "${ROOT_PARTRITION}"
+    cryptsetup luksFormat --type luks1 "${ROOT_PARTRITION}"
     sleep 0.5
     printf "${GREEN}%s${NORMAL}\n" "Please enter a name for the encrypted partrition"
     read -rep '' ENCRYPTED_NAME
@@ -182,10 +182,10 @@ install_base_system() {
     # create pseudo file system
     # TODO: maybe split this function in two seperate 1. install 2. chroot
     for DIR in sys dev proc; do
-        mount --rbind /${DIR} /mnt/${DIR}
         mount --make-rslave /mnt/${DIR}
+        mount --rbind /${DIR} /mnt/${DIR}
     done
-    cp -L /etc/resolc.conf /mnt/etc/
+    cp -L /etc/resolv.conf /mnt/etc/
     cp -L /etc/wpa_supplicant/wpa_supplicant-"${INTERFACE}".conf /mnt/etc/wpa_supplicant/
     BTRFS_OPT=${BTRFS_OPT} PS1='(chroot) # ' chroot /mnt/ /bin/bash
 }
